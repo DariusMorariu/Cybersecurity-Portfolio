@@ -1,0 +1,45 @@
+# Private workspace
+99_Private/
+**/private/
+**/secrets/
+
+# Credentials and cryptographic material
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+*.ovpn
+credentials.*
+secrets.*
+
+# Captures, databases and machine images
+*.pcap
+*.pcapng
+*.db
+*.sqlite
+*.sqlite3
+*.iso
+*.img
+*.qcow2
+*.vmdk
+*.vdi
+*.ova
+*.ovf
+
+# Temporary and generated files
+*.log
+*.tmp
+*.bak
+~$*.docx
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Operating-system and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
