@@ -16,7 +16,10 @@ flowchart LR
     Switch --> Workstation["Main workstation"]
     Switch --> Server["Fujitsu ESPRIMO Q556/2"]
     Server --> Proxmox["Proxmox VE (VLAN Aware)"]
+    Proxmox --> SIEM["Wazuh SIEM (Dual-Homed: VLAN 1 & 30)"]
     Proxmox --> LabVMs["Isolated lab VMs (VLAN 30)"]
+    SIEM -.->|Local Log Collection| LabVMs
+    SIEM -.->|Host Monitoring| Proxmox
     Server <-->|Metrics & Touch Control| Display["ESP32 status display"]
     Laptop["Dedicated Kali laptop"] -. authorized lab traffic .-> Switch
 ```
@@ -75,8 +78,11 @@ The custom 1.5U mount supports 160 mm of the chassis depth. Approximately
 - [x] Build the first isolated security lab
 - [x] Integrate the ESP32 status display (Live CPU/Network graphs + Touch VM control)
 
-**Phase 2: Blue Teaming & Infrastructure (Upcoming)**
-- [ ] Deploy SIEM (e.g., Wazuh) for network monitoring and logging
+**Phase 2: Blue Teaming & Infrastructure (In Progress)**
+- [x] Deploy SIEM (Wazuh) for network monitoring and logging
+  - [x] Configure dual-homed networking (VLAN 1 & VLAN 30) for secure log collection
+  - [x] Deploy Wazuh Agent via air-gapped offline install to isolated Juice Shop VM
+  - [x] Deploy Wazuh Agent to Proxmox Hypervisor for host monitoring
 - [ ] Build a Windows Active Directory environment (Domain Controller & Client)
 
 Detailed chronological notes are available in

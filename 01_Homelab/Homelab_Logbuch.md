@@ -3,6 +3,31 @@
 Dieses Logbuch wird während des Aufbaus laufend ergänzt. Aus den Einträgen
 entsteht später die fertige Word-Dokumentation für das Portfolio.
 
+## 12.08.2026 - SIEM-Deployment & Security Monitoring (Phase 2)
+
+### Wazuh Server & Dual-Homed Netzwerk-Architektur
+- Wazuh als zentrales Open-Source-SIEM zur Überwachung des Homelabs installiert.
+- Um die strikte Isolation des Hacking-Labs (VLAN 30) aufrechtzuerhalten, wurde eine "Dual-Homed"-Architektur umgesetzt.
+- Der Wazuh-VM wurde in Proxmox auf Layer-2-Ebene eine zweite virtuelle Netzwerkkarte (`ens19`) mit VLAN-Tag 30 zugewiesen.
+- Diese zweite Netzwerkkarte wurde via Netplan mit der festen IP `10.30.0.100/24` konfiguriert – **bewusst ohne Default-Gateway**, um ein Routing ins Internet auf Layer-3-Ebene komplett auszuschließen.
+
+### Agent Deployment: Isoliertes Hacking-Lab (Juice Shop)
+- Da die verwundbare Juice-Shop-VM (`10.30.0.20`) aus Sicherheitsgründen keinen Internetzugang besitzt, war ein klassisches Online-Deployment des Agenten nicht möglich.
+- **Lösung (Offline-Deployment / Air-Gapped):** Das `.deb`-Paket wurde über das internetfähige Interface des Wazuh-Servers heruntergeladen und per `scp` über das isolierte VLAN-30-Interface auf die Ziel-VM übertragen.
+- Die Installation erfolgte lokal über `dpkg`, wobei die IP des Managers via Umgebungsvariablen (`WAZUH_MANAGER`) übergeben wurde. Der Agent kommuniziert nun erfolgreich über das isolierte Netz.
+
+### Agent Deployment: Proxmox Hypervisor
+- Den Wazuh-Agenten direkt auf dem Proxmox-Host installiert, um das Fundament des Homelabs (Logins, Änderungen an Systemdateien via File Integrity Monitoring) zu überwachen.
+- Initiale Installationsprobleme (fehlender Systembenutzer `wazuh` beim Start des Dienstes) wurden behoben, indem das lokale `.deb`-Paket über `apt` statt rein über `dpkg` entpackt wurde, um alle Installations-Skripte sauber auszuführen.
+- Der Hypervisor funkt nun erfolgreich als zweiter aktiver Agent über das normale Heimnetz (VLAN 1) an das SIEM.
+
+### Nächste Schritte
+- **Active Directory (Geplant):** Eine Windows Server Umgebung (Domain Controller) inkl. Windows-Client als Basis für spätere HTB-relevante AD-Angriffe aufbauen.
+- Erste simulierte Angriffe (z. B. fehlerhafte Logins) vom dedizierten Kali-Laptop auf den Juice Shop starten, um die Alarmierung im SIEM-Dashboard zu validieren.
+- Backup- und Wiederherstellungskonzept für die kritischen VMs testen.
+
+---
+
 ## 11.08.2026 - Finaler Build, Proxmox & Hacking-Lab
 
 ### Hardware-Build & 3D-Druck
@@ -23,11 +48,6 @@ entsteht später die fertige Word-Dokumentation für das Portfolio.
 - Virtueller Proxmox-Switch (`vmbr0`) arbeitet "VLAN aware".
 - **Netzwerk-Härtung:** Die Ubuntu-VM (Juice Shop) wurde mit statischer IP (`10.30.0.20/24`) ohne Standardgateway und DNS konfiguriert. Jeglicher Outbound-Traffic ins Internet ist erfolgreich unterbunden.
 - **Abnahme:** Isolationstest via Port 4 erfolgreich (kein Internetzugriff, aber voller Zugriff auf die Ziel-VM über Port 3000).
-
-### Nächste Schritte (Phase 2: Blue Teaming & Infrastructure)
-- **Monitoring & SIEM (Priorität):** Ein Open-Source-SIEM (z. B. Wazuh) aufsetzen, um Netzwerk-Traffic und Angriffe im Lab zu protokollieren und zu analysieren.
-- **Active Directory (Geplant):** Eine Windows Server Umgebung (Domain Controller) inkl. Windows-Client als Basis für spätere HTB-relevante AD-Angriffe aufbauen.
-- Backup- und Wiederherstellungskonzept für die VMs testen.
 
 ---
 
