@@ -23,7 +23,6 @@ planned Proxmox virtualization environment.
 
 | Directory | Purpose |
 | --- | --- |
-| `00_START_HIER` | Documentation guidelines |
 | `01_Homelab` | Homelab architecture, build log and validation |
 | `02_Lab_Reports` | Sanitized lab reports |
 | `03_Incident_Reports` | Incident-response exercises |
@@ -31,7 +30,6 @@ planned Proxmox virtualization environment.
 | `05_Architecture` | Sanitized diagrams and network designs |
 | `06_Scripts` | Security and automation scripts |
 | `07_Evidence` | Screenshots and project evidence |
-| `08_CV_Bausteine` | Reusable CV and LinkedIn material |
 
 ## Current Skills
 
