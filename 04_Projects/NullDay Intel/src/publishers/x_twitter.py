@@ -54,7 +54,7 @@ class XPublisher(BasePublisher):
 
         if dry_run or not self._client:
             print("\n" + "=" * 70)
-            print("🐦 [DRY-RUN] X / TWITTER ALERT PREVIEW")
+            print("[DRY-RUN] X / TWITTER ALERT PREVIEW")
             print("=" * 70)
             print(f"Root Tweet ({len(tweet_text)} / 280 chars):")
             print(f">>> {tweet_text}")

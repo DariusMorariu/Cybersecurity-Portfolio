@@ -61,15 +61,23 @@ class DiscordReport(BaseModel):
         description="Briefing header title",
     )
     summary: str = Field(
-        description="Executive summary paragraph (~3-5 sentences) summarizing the macro threat landscape of the period."
+        description="Executive summary paragraph assessing the macro threat posture for the period."
+    )
+    strategic_analysis: str = Field(
+        default="",
+        description="In-depth multi-paragraph strategic threat analysis (threat actor campaigns, exploit trends, operational impact) providing a comprehensive ~5-minute executive read.",
     )
     threat_level: str = Field(
         default="ELEVATED",
         description="Current overall threat level: CRITICAL, HIGH, ELEVATED, or ROUTINE",
     )
+    key_recommendations: List[str] = Field(
+        default_factory=list,
+        description="3 to 5 concrete strategic defensive directives for security leadership and SOC teams.",
+    )
     incidents: List[IncidentItem] = Field(
         default_factory=list,
-        description="List of prioritized security incidents and vulnerability briefs",
+        description="List of 4 to 8 prioritized security incidents and vulnerability briefs",
     )
 
 

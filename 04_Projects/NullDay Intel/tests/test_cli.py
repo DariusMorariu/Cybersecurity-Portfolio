@@ -39,5 +39,5 @@ def test_cli_dry_run_execution(tmp_path):
     )
     assert res.returncode == 0
     assert "[DRY-RUN]" in res.stdout
-    assert "DISCORD WEBHOOK PAYLOAD PREVIEW" in res.stdout
+    assert "DISCORD WEBHOOK EXECUTIVE BRIEFING PREVIEW" in res.stdout
     assert "X / TWITTER ALERT PREVIEW" in res.stdout

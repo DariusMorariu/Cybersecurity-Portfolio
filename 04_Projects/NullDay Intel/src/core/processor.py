@@ -18,37 +18,44 @@ from src.core.models import (
 logger = logging.getLogger("nullday.processor")
 
 
-SYSTEM_PROMPT_TEMPLATE = """You are "NullDay Intel", an elite Cyber Threat Intelligence (CTI) analyst engine designed for senior security operations center (SOC) analysts, incident responders, and CISOs.
+SYSTEM_PROMPT_TEMPLATE = """You are "NullDay Intel", an elite Cyber Threat Intelligence (CTI) analyst engine designed for senior security operations center (SOC) analysts, incident response commanders, and CISOs.
 
-Analyze the provided raw security feed items collected during the '{mode}' observation window and synthesize an executive threat briefing.
+Analyze the provided raw security feed items collected during the '{mode}' observation window and synthesize a comprehensive executive threat briefing.
 
-CRITICAL REQUIREMENTS:
-1. Prioritization Hierarchy:
-   - Actively exploited in the wild (CISA KEV / 0-day) > Critical CVE (CVSS >= 8.0) > High-impact ransomware / extortion > Major verified data breach.
-   - Discard low-impact noise, minor patch releases, or marketing fluff.
+ABSOLUTE STYLE & FORMATTING CONSTRAINTS:
+1. ZERO EMOJIS: Do NOT use any emojis, icons, or decorative unicode symbols under any circumstances in any field (no shields, alerts, fire, warning signs, etc.). Maintain a strictly objective, authoritative, intelligence-grade tone aligned with CISA alerts, BSI Lageberichte, and Mandiant intelligence publications.
+2. 5-MINUTE EXECUTIVE READ: This briefing must be thorough, analytical, and actionable. Avoid brief or superficial summaries. Provide in-depth technical analysis and context across all sections.
 
-2. Discord Executive Report:
-   - Provide a professional, concise executive summary paragraph (3-5 sentences) assessing the macro threat posture for the period.
-   - For each prioritized incident, extract:
-     * title: Clear, impact-focused incident headline
-     * impact_sector: Affected sector or technology stack (e.g. Healthcare, Critical Infrastructure, Enterprise VPNs, Cloud Identity)
-     * estimated_damage: Specific ransom demand / extortion amount / breach scope if disclosed, OR EXACTLY "Schadenssumme: Unbekannt / Nicht publiziert"
-     * cvss: Float score (e.g. 9.8) if mentioned, else null
-     * cve_id: Primary CVE (e.g. "CVE-2026-1234") or null
-     * kev_status: true if listed in CISA KEV or confirmed active in-the-wild exploitation
-     * mitigation: Concrete, actionable mitigation / remediation steps for defenders
-     * source_url: Direct original reference link from the input articles
+SECTION REQUIREMENTS:
 
-3. X (Twitter) Alert Payload:
-   - tweet_text: MUST be strictly under 260 characters (leaving room for Twitter metadata / t.co shortlinks).
-     * Focus on the single most critical threat or CVE of the batch.
-     * Include affected target / sector.
+1. Discord Executive Report:
+   - summary: Detailed executive summary paragraph assessing the overall threat posture during this {mode} period.
+   - strategic_analysis: Extensive multi-paragraph strategic assessment covering:
+     * Threat Vector Trends: Perimeter vulnerabilities, identity provider exploitation, and supply-chain vectors.
+     * Exploitation & KEV Activity: Analysis of actively exploited flaws and 0-day campaigns.
+     * Ransomware & Threat Actor Syndicates: Active extortion campaigns, extortion methods, and target selection.
+     * Strategic Defense Guidance: Priorities for hardening, patch management, and telemetry visibility.
+   - key_recommendations: 3 to 5 prioritized strategic defensive directives for security leadership and engineering teams.
+   - incidents: Thoroughly analyze and document between 4 and 8 prioritized incidents from the ingested articles:
+     * title: Factual, professional headline without hype.
+     * impact_sector: Affected sector and exact technology stack (e.g., Enterprise Perimeter VPNs, Healthcare Infrastructure, Cloud Identity Gateways).
+     * estimated_damage: Disclosed extortion sums, fines, or data volumes; if undisclosed or unverified, write EXACTLY: "Schadenssumme: Unbekannt / Nicht publiziert".
+     * cvss: Float score (e.g. 9.8) if mentioned, else null.
+     * cve_id: Primary CVE (e.g. "CVE-2026-1234") or null.
+     * kev_status: true if listed in CISA KEV or confirmed active in-the-wild exploitation.
+     * mitigation: Concrete, actionable mitigation and patching instructions.
+     * source_url: Direct original reference link from the input articles.
+
+2. X (Twitter) Alert Payload:
+   - tweet_text: Strictly under 260 characters without any emojis.
+     * Factual and urgent tone starting with "[CTI ALERT]" or "[SECURITY ADVISORY]".
+     * Highlight the #1 critical threat or CVE of the batch, the affected technology, and the immediate risk.
      * End with 2-3 hashtags: #ThreatIntel #CyberSecurity #CVE (or #Ransomware).
-   - thread_reply: A follow-up reply tweet strictly under 280 characters detailing concrete mitigation guidance and the primary source link.
+   - thread_reply: Strictly under 280 characters without any emojis. Concise mitigation steps and the primary reference link.
 
-4. Output Language:
-   - The analysis and technical details should be in clear, professional English.
-   - If damage is unstated, use the exact German standard string: "Schadenssumme: Unbekannt / Nicht publiziert".
+3. Prioritization Hierarchy:
+   - Confirmed Active Exploitation (CISA KEV / 0-day) > Critical CVE (CVSS >= 8.0) > High-impact ransomware / extortion > Major verified data breach.
+   - Discard low-impact marketing webinars, product pitches, or non-actionable fluff.
 """
 
 
@@ -71,64 +78,106 @@ class CTIProcessor:
             return "No new security incidents or CVE disclosures were collected during this observation window."
 
         lines = []
-        for i, art in enumerate(articles[:25], 1):  # Cap at top 25 to respect prompt token economy
+        for i, art in enumerate(articles[:35], 1):  # Feed top 35 to provide rich material for 5-min read
             cve_str = f" [CVEs: {', '.join(art.cve_candidates)}]" if art.cve_candidates else ""
             kev_flag = " [CRITICAL: ACTIVE KEV]" if art.is_kev else ""
             lines.append(
                 f"### Entry {i}: {art.title}{cve_str}{kev_flag}\n"
                 f"- Source: {art.source_name} | Published: {art.published_at.isoformat()}\n"
                 f"- Link: {art.url}\n"
-                f"- Summary: {art.summary.strip()[:400]}\n"
+                f"- Summary: {art.summary.strip()[:450]}\n"
             )
         return "\n".join(lines)
 
     def _generate_mock_result(self, articles: List[RawArticle], mode: str) -> CTIAnalysisResult:
-        """Generate a realistic fallback briefing when running offline or in mock test mode."""
+        """Generate an in-depth, emoji-free fallback briefing for offline tests or demo runs."""
         if not articles:
             return CTIAnalysisResult(
                 discord_report=DiscordReport(
-                    title=f"NullDay Intel // {mode.capitalize()} Briefing - Routine Status",
-                    summary=f"No high-severity vulnerabilities or active exploitation campaigns exceeded threshold during this {mode} window. Perimeter hygiene and logging telemetry remain stable.",
+                    title=f"Cyber Threat Assessment - {mode.capitalize()} Surveillance Status",
+                    summary=f"Surveillance across all monitored intelligence feeds confirms that no zero-day vulnerabilities or active exploitation campaigns exceeded critical thresholds during the {mode} monitoring cycle. Perimeter hygiene and logging telemetry remain stable across enterprise boundaries.",
+                    strategic_analysis=(
+                        "During this observation window, vulnerability ingestion and threat telemetry indicate baseline defensive stability. "
+                        "Security teams should prioritize scheduled patch audits, identity access reviews, and verification of external perimeter exposures. "
+                        "Threat actor activity continues to focus on opportunistic scanning of unpatched network edge devices and misconfigured cloud identities."
+                    ),
                     threat_level="ROUTINE",
+                    key_recommendations=[
+                        "Verify that all external-facing services maintain current vendor patch baselines.",
+                        "Enforce strict multi-factor authentication (MFA) and conditional access on administrative endpoints.",
+                        "Audit SIEM telemetry to confirm unbroken ingestion from perimeter firewalls and VPN gateways.",
+                    ],
                     incidents=[],
                 ),
                 x_payload=XPayload(
-                    tweet_text=f"🟢 NullDay Intel {mode.capitalize()} Update: Threat landscape stable across monitored feeds. No critical 0-days detected in the last cycle. #ThreatIntel #CyberSecurity",
-                    thread_reply="Defenders: Routine audit of external attack surfaces and patch verification recommended. Full briefing in Discord.",
+                    tweet_text=f"[CTI UPDATE] NullDay Intel {mode.capitalize()} Briefing: Threat landscape stable across monitored feeds. No critical 0-days detected in current cycle. #ThreatIntel #CyberSecurity",
+                    thread_reply="Defenders: Routine audit of external attack surfaces and patch verification recommended. Full briefing available in Discord.",
                 ),
             )
 
-        # Select highest-priority candidate (KEV or explicit CVE)
+        # Prioritize items with KEV or CVE candidates
         candidates = [a for a in articles if a.is_kev or a.cve_candidates]
-        top = candidates[0] if candidates else articles[0]
-        cve = top.cve_candidates[0] if top.cve_candidates else "CVE-2026-UNSPECIFIED"
-        mock_incidents = [
-            IncidentItem(
-                title=top.title,
-                cve_id=cve if cve != "CVE-2026-UNSPECIFIED" else None,
-                cvss=9.1 if top.is_kev else 8.4,
-                kev_status=top.is_kev,
-                impact_sector="Enterprise Infrastructure / Network Perimeter",
-                estimated_damage="Schadenssumme: Unbekannt / Nicht publiziert",
-                mitigation="Isolate exposed management interfaces, verify IOCs, and deploy latest vendor security update immediately.",
-                source_url=top.url,
-            )
-        ]
+        if not candidates:
+            candidates = articles
 
-        headline_tweet = f"🚨 ALERT: Critical exploit activity detected in {cve if cve != 'CVE-2026-UNSPECIFIED' else top.title[:40]}. Active perimeter threat. #ThreatIntel #CyberSecurity #CVE"
+        # Build 4 prioritized incident briefs for an in-depth briefing
+        mock_incidents: List[IncidentItem] = []
+        for idx, art in enumerate(candidates[:4], 1):
+            cve = art.cve_candidates[0] if art.cve_candidates else "CVE-PENDING"
+            is_critical = art.is_kev or (idx == 1)
+            mock_incidents.append(
+                IncidentItem(
+                    title=art.title,
+                    cve_id=cve if cve != "CVE-PENDING" else None,
+                    cvss=9.2 if is_critical else 7.8,
+                    kev_status=art.is_kev,
+                    impact_sector="Enterprise Infrastructure & Perimeter Gateways",
+                    estimated_damage="Schadenssumme: Unbekannt / Nicht publiziert",
+                    mitigation=(
+                        "1. Restrict external network access to administrative interfaces immediately.\n"
+                        "2. Review authentication and access logs for anomalous session tokens.\n"
+                        "3. Apply official vendor security update per advisory guidance."
+                    ),
+                    source_url=art.url,
+                )
+            )
+
+        top = mock_incidents[0]
+        top_cve = top.cve_id if top.cve_id else top.title[:50]
+
+        strategic_text = (
+            f"Intelligence aggregated across {len(articles)} disclosures reveals heightened adversary interest in enterprise perimeter technologies. "
+            "Threat actors are increasingly compressing the window between public vulnerability disclosure and automated exploitation, "
+            "frequently targeting gateway devices, authentication protocols, and unpatched web services. "
+            "\n\n"
+            "SOC teams must account for opportunistic post-exploitation lateral movement following initial access. "
+            "Credential dumping and session hijacking continue to serve as primary entry points for secondary ransomware deployment."
+        )
+
+        headline_tweet = f"[CTI ALERT] Active exploitation detected in {top_cve}. Immediate perimeter containment and patch validation advised. #ThreatIntel #CyberSecurity #CVE"
         if len(headline_tweet) > 260:
             headline_tweet = headline_tweet[:257] + "..."
 
         return CTIAnalysisResult(
             discord_report=DiscordReport(
-                title=f"NullDay Intel // {mode.capitalize()} Cyber Threat Briefing",
-                summary=f"Analysis of {len(articles)} ingested intelligence items indicates active threat vector targeting perimeter infrastructure. Immediate patch validation advised.",
+                title=f"Executive Cyber Threat Briefing // {mode.capitalize()} Assessment",
+                summary=(
+                    f"Operational threat analysis of {len(articles)} telemetry items collected during this {mode} cycle highlights active exploitation "
+                    f"and critical exposure in perimeter technologies. Security operations teams are advised to execute immediate containment and verification workflows."
+                ),
+                strategic_analysis=strategic_text,
                 threat_level="CRITICAL" if any(a.is_kev for a in articles) else "HIGH",
+                key_recommendations=[
+                    "Conduct immediate exposure discovery for affected perimeter and gateway appliances.",
+                    "Verify file integrity and authentication logs across all administrative ingress points.",
+                    "Ensure backup immutability and test offline disaster recovery workflows.",
+                    "Ingest verified indicators of compromise (IOCs) directly into endpoint and perimeter blocklists.",
+                ],
                 incidents=mock_incidents,
             ),
             x_payload=XPayload(
                 tweet_text=headline_tweet,
-                thread_reply=f"Mitigation: Restrict inbound access and patch per vendor advisory. Ref: {top.url[:80]}",
+                thread_reply=f"Mitigation: Restrict inbound access and patch per vendor advisory. Reference: {top.source_url[:90]}",
             ),
         )
 
@@ -165,7 +214,6 @@ class CTIProcessor:
             if hasattr(response, "parsed") and response.parsed:
                 result: CTIAnalysisResult = response.parsed
             else:
-                # Parse from text if needed
                 raw_json = json.loads(response.text)
                 result = CTIAnalysisResult.model_validate(raw_json)
 
@@ -184,5 +232,5 @@ class CTIProcessor:
 
         except Exception as e:
             logger.error(f"GenAI processing failed: {e}. Falling back to deterministic briefing.", exc_info=True)
-            print(f"\n⚠️ [NOTICE] GenAI API call returned: {e}. Falling back to rule-based briefing.")
+            print(f"\n[NOTICE] GenAI API call returned: {e}. Falling back to rule-based briefing.")
             return self._generate_mock_result(articles, mode)
