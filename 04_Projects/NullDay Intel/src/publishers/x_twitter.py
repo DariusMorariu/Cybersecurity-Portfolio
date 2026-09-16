@@ -83,7 +83,22 @@ class XPublisher(BasePublisher):
             return True
 
         except Exception as e:
-            msg = f"[ERROR] Failed to publish tweet via X API v2: {e}"
+            details = []
+            if hasattr(e, "response") and e.response is not None:
+                status = getattr(e.response, "status_code", "N/A")
+                body = getattr(e.response, "text", "")
+                details.append(f"HTTP Status: {status} | Details: {body}")
+            if hasattr(e, "api_messages") and e.api_messages:
+                details.append(f"API Messages: {e.api_messages}")
+            
+            detail_str = f" ({' | '.join(details)})" if details else ""
+            msg = f"[ERROR] Failed to publish tweet via X API v2: {e}{detail_str}"
             logger.error(msg, exc_info=True)
             print(msg)
+            print("\n[TROUBLESHOOTING X/TWITTER API]")
+            print("1. Log in to https://developer.x.com/en/portal/dashboard")
+            print("2. Open your Project App -> Settings -> 'User authentication settings' -> Edit.")
+            print("3. Ensure 'App permissions' is set to 'Read and write'.")
+            print("4. IMPORTANT: If permissions were changed after tokens were created, go to the 'Keys and tokens' tab and REGENERATE your Access Token and Secret.")
+            print("5. Update X_ACCESS_TOKEN and X_ACCESS_TOKEN_SECRET in GitHub Secrets.\n")
             return False

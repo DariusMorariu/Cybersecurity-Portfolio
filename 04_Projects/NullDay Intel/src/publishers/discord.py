@@ -41,11 +41,11 @@ class DiscordPublisher(BasePublisher):
         color = self._determine_color(report.threat_level, has_kev)
 
         posture_label = {
-            "CRITICAL": "THREAT POSTURE: CRITICAL // IMMEDIATE ACTION REQUIRED",
-            "HIGH": "THREAT POSTURE: HIGH // ELEVATED THREAT ENVIRONMENT",
-            "ELEVATED": "THREAT POSTURE: ELEVATED // ACTIVE MONITORING",
-            "ROUTINE": "THREAT POSTURE: ROUTINE // BASELINE SURVEILLANCE",
-        }.get(report.threat_level, "THREAT POSTURE: ACTIVE SURVEILLANCE")
+            "CRITICAL": "THREAT STATUS: CRITICAL - IMMEDIATE ACTION REQUIRED",
+            "HIGH": "THREAT STATUS: HIGH - ELEVATED ATTACK ACTIVITY",
+            "ELEVATED": "THREAT STATUS: ELEVATED - ACTIVE SURVEILLANCE",
+            "ROUTINE": "THREAT STATUS: ROUTINE - BASELINE MONITORING",
+        }.get(report.threat_level, "THREAT STATUS: ACTIVE MONITORING")
 
         desc_parts = [
             f"**{posture_label}**\n",
@@ -53,7 +53,7 @@ class DiscordPublisher(BasePublisher):
         ]
 
         if report.strategic_analysis:
-            desc_parts.append(f"### Strategic Threat Analysis\n{report.strategic_analysis}\n")
+            desc_parts.append(f"### What Is Happening & How To Defend\n{report.strategic_analysis}\n")
 
         description = "\n".join(desc_parts)
         if len(description) > 4000:
@@ -61,13 +61,13 @@ class DiscordPublisher(BasePublisher):
 
         fields = [
             {
-                "name": "Incident Volume",
-                "value": f"{len(report.incidents)} validated threat disclosures",
+                "name": "Incidents Analyzed",
+                "value": f"{len(report.incidents)} threat reports in this cycle",
                 "inline": True,
             },
             {
-                "name": "Active KEV Disclosures",
-                "value": f"{sum(1 for i in report.incidents if i.kev_status)} confirmed in-the-wild exploits",
+                "name": "Active Zero-Day / KEV Exploits",
+                "value": f"{sum(1 for i in report.incidents if i.kev_status)} confirmed in-the-wild attacks",
                 "inline": True,
             },
         ]
@@ -78,7 +78,7 @@ class DiscordPublisher(BasePublisher):
             "color": color,
             "fields": fields,
             "footer": {
-                "text": "NullDay Intel | Operational Cyber Threat Intelligence Briefing",
+                "text": "NullDay Intel | Automated Cyber Threat Intelligence",
             },
         }
 
@@ -88,12 +88,12 @@ class DiscordPublisher(BasePublisher):
             return None
 
         lines = [f"{i}. {rec}" for i, rec in enumerate(recommendations, 1)]
-        desc = "The following prioritized directives are recommended for defensive posture alignment:\n\n" + "\n\n".join(lines)
+        desc = "The following action steps are recommended to protect your environment:\n\n" + "\n\n".join(lines)
         if len(desc) > 4000:
             desc = desc[:3997] + "..."
 
         return {
-            "title": "STRATEGIC DEFENSIVE DIRECTIVES",
+            "title": "RECOMMENDED ACTION CHECKLIST",
             "description": desc,
             "color": color,
             "footer": {
@@ -111,7 +111,7 @@ class DiscordPublisher(BasePublisher):
 
         fields = [
             {
-                "name": "Target Sector & Technology",
+                "name": "Affected Systems & Software",
                 "value": incident.impact_sector[:250],
                 "inline": True,
             },
@@ -121,18 +121,18 @@ class DiscordPublisher(BasePublisher):
                 "inline": True,
             },
             {
-                "name": "Impact & Breach Assessment",
+                "name": "Estimated Impact & Loss",
                 "value": incident.estimated_damage[:250],
                 "inline": False,
             },
             {
-                "name": "Defensive Action & Remediation",
+                "name": "Recommended Action / Fix",
                 "value": incident.mitigation[:1000],
                 "inline": False,
             },
             {
-                "name": "Verification & Reference",
-                "value": f"[Originalquelle]({incident.source_url})",
+                "name": "Original Advisory Link",
+                "value": f"[Original Article / Source]({incident.source_url})",
                 "inline": False,
             },
         ]

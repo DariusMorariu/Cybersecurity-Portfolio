@@ -106,29 +106,40 @@ def main() -> int:
     if not discord_ok:
         logger.error("Discord publishing failed.")
         print("[ERROR] Discord publishing failed. Check DISCORD_WEBHOOK_URL.")
+    else:
+        print("[SUCCESS] Discord executive briefing published successfully.")
+
     if not x_ok:
-        logger.error("X/Twitter publishing failed.")
-        print("[ERROR] X/Twitter publishing failed. Check X API credentials and permissions.")
+        logger.warning("X/Twitter publishing failed.")
+        print("[WARNING] X/Twitter publishing failed. See troubleshooting guide above.")
+    else:
+        print("[SUCCESS] X/Twitter alert thread published successfully.")
 
     overall_ok = discord_ok and x_ok
 
     # 5. State Persistence
-    if not args.dry_run and overall_ok:
+    # If at least one channel published (e.g. Discord succeeded), save state to prevent duplicate posts
+    if not args.dry_run and (discord_ok or x_ok):
         db.mark_processed(raw_articles, mode=args.mode)
         db.record_run(
             mode=args.mode,
             items_fetched=len(raw_articles),
             items_new=len(raw_articles),
             threat_level=analysis_result.discord_report.threat_level,
-            status="SUCCESS",
+            status="SUCCESS" if overall_ok else "PARTIAL",
         )
         logger.info("State database updated and run recorded.")
     elif args.dry_run:
         logger.info("[Dry-Run Complete] Database state changes skipped.")
 
-    if not overall_ok:
-        logger.error("Pipeline encountered errors during publishing.")
+    if not (discord_ok or x_ok):
+        logger.error("Both Discord and X/Twitter publishing failed.")
         return 1
+
+    if not overall_ok:
+        logger.warning("Pipeline completed with partial success (Discord succeeded, X failed).")
+        # Return 0 so GitHub Actions pushes the updated state database and doesn't fail the build
+        return 0
 
     logger.info("NullDay Intel execution completed successfully.")
     return 0
