@@ -103,6 +103,13 @@ def main() -> int:
     discord_ok = discord_pub.publish(analysis_result, dry_run=args.dry_run)
     x_ok = x_pub.publish(analysis_result, dry_run=args.dry_run)
 
+    if not discord_ok:
+        logger.error("Discord publishing failed.")
+        print("[ERROR] Discord publishing failed. Check DISCORD_WEBHOOK_URL.")
+    if not x_ok:
+        logger.error("X/Twitter publishing failed.")
+        print("[ERROR] X/Twitter publishing failed. Check X API credentials and permissions.")
+
     overall_ok = discord_ok and x_ok
 
     # 5. State Persistence

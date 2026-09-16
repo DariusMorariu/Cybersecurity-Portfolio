@@ -83,5 +83,7 @@ class XPublisher(BasePublisher):
             return True
 
         except Exception as e:
-            logger.error(f"Failed to publish tweet via X API v2: {e}", exc_info=True)
+            msg = f"[ERROR] Failed to publish tweet via X API v2: {e}"
+            logger.error(msg, exc_info=True)
+            print(msg)
             return False

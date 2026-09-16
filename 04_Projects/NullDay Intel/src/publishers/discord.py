@@ -219,12 +219,14 @@ class DiscordPublisher(BasePublisher):
                 for idx, batch in enumerate(batches, 1):
                     response = client.post(self.webhook_url, json=batch, headers=headers)
                     if response.status_code not in (200, 204):
-                        logger.error(
-                            f"Discord webhook error in batch {idx}: HTTP {response.status_code} - {response.text}"
-                        )
+                        msg = f"[ERROR] Discord webhook error in batch {idx}: HTTP {response.status_code} - {response.text}"
+                        logger.error(msg)
+                        print(msg)
                         return False
                     logger.info(f"Successfully posted Discord batch {idx}/{len(batches)}.")
             return True
         except Exception as e:
-            logger.error(f"Failed to transmit Discord webhook: {e}", exc_info=True)
+            msg = f"[ERROR] Failed to transmit Discord webhook: {e}"
+            logger.error(msg, exc_info=True)
+            print(msg)
             return False

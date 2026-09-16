@@ -194,43 +194,49 @@ class CTIProcessor:
         prompt_context = self._build_context(articles)
         system_instruction = SYSTEM_PROMPT_TEMPLATE.format(mode=mode)
 
-        logger.info(
-            f"Invoking Google GenAI model '{self.model_name}' for {len(articles)} articles (mode: {mode})..."
-        )
+        candidate_models = [self.model_name]
+        for fallback in ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-1.5-flash"]:
+            if fallback not in candidate_models:
+                candidate_models.append(fallback)
 
-        try:
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=f"Raw Feed Articles:\n\n{prompt_context}",
-                config=types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    response_mime_type="application/json",
-                    response_schema=CTIAnalysisResult,
-                    temperature=0.2,  # Low temperature for analytical accuracy
-                ),
+        last_error = None
+        for current_model in candidate_models:
+            logger.info(
+                f"Invoking Google GenAI model '{current_model}' for {len(articles)} articles (mode: {mode})..."
             )
-
-            # Retrieve parsed Pydantic model directly
-            if hasattr(response, "parsed") and response.parsed:
-                result: CTIAnalysisResult = response.parsed
-            else:
-                raw_json = json.loads(response.text)
-                result = CTIAnalysisResult.model_validate(raw_json)
-
-            # Enforce strict character limits on Twitter output as defense-in-depth
-            if len(result.x_payload.tweet_text) > 260:
-                logger.warning(
-                    f"LLM tweet text exceeded 260 chars ({len(result.x_payload.tweet_text)}). Truncating."
+            try:
+                response = self.client.models.generate_content(
+                    model=current_model,
+                    contents=f"Raw Feed Articles:\n\n{prompt_context}",
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        response_mime_type="application/json",
+                        response_schema=CTIAnalysisResult,
+                        temperature=0.2,
+                    ),
                 )
-                result.x_payload.tweet_text = result.x_payload.tweet_text[:257] + "..."
 
-            if result.x_payload.thread_reply and len(result.x_payload.thread_reply) > 280:
-                result.x_payload.thread_reply = result.x_payload.thread_reply[:277] + "..."
+                if hasattr(response, "parsed") and response.parsed:
+                    result: CTIAnalysisResult = response.parsed
+                else:
+                    raw_json = json.loads(response.text)
+                    result = CTIAnalysisResult.model_validate(raw_json)
 
-            logger.info("Successfully generated structured CTI briefing from GenAI.")
-            return result
+                # Enforce character limits on Twitter output
+                if len(result.x_payload.tweet_text) > 260:
+                    result.x_payload.tweet_text = result.x_payload.tweet_text[:257] + "..."
 
-        except Exception as e:
-            logger.error(f"GenAI processing failed: {e}. Falling back to deterministic briefing.", exc_info=True)
-            print(f"\n[NOTICE] GenAI API call returned: {e}. Falling back to rule-based briefing.")
-            return self._generate_mock_result(articles, mode)
+                if result.x_payload.thread_reply and len(result.x_payload.thread_reply) > 280:
+                    result.x_payload.thread_reply = result.x_payload.thread_reply[:277] + "..."
+
+                logger.info(f"Successfully generated structured CTI briefing with model '{current_model}'.")
+                return result
+
+            except Exception as e:
+                last_error = e
+                logger.warning(f"GenAI call with '{current_model}' failed: {e}")
+                # Continue loop to try next model
+
+        logger.error(f"All GenAI models failed. Last error: {last_error}", exc_info=True)
+        print(f"\n[NOTICE] All GenAI model attempts failed ({last_error}). Using deterministic briefing.")
+        return self._generate_mock_result(articles, mode)
