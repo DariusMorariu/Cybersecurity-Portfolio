@@ -98,7 +98,9 @@ class CTIProcessor:
                 ),
             )
 
-        top = articles[0]
+        # Select highest-priority candidate (KEV or explicit CVE)
+        candidates = [a for a in articles if a.is_kev or a.cve_candidates]
+        top = candidates[0] if candidates else articles[0]
         cve = top.cve_candidates[0] if top.cve_candidates else "CVE-2026-UNSPECIFIED"
         mock_incidents = [
             IncidentItem(
@@ -182,4 +184,5 @@ class CTIProcessor:
 
         except Exception as e:
             logger.error(f"GenAI processing failed: {e}. Falling back to deterministic briefing.", exc_info=True)
+            print(f"\n⚠️ [NOTICE] GenAI API call returned: {e}. Falling back to rule-based briefing.")
             return self._generate_mock_result(articles, mode)

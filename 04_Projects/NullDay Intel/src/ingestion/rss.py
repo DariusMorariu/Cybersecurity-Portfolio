@@ -77,10 +77,25 @@ class RSSFetcher(BaseFeedFetcher):
             logger.warning(f"Failed to parse RSS XML from {self.name}: {e}")
             return []
 
+        ignored_keywords = [
+            "[virtual event]",
+            "webinar",
+            "[webinar]",
+            "sponsored:",
+            "[sponsored]",
+            "whitepaper",
+            "[white paper]",
+        ]
+
         for entry in feed.entries:
             title = entry.get("title", "").strip()
             link = entry.get("link", "").strip()
             if not link or not title:
+                continue
+
+            # Filter out non-threat promotional material
+            title_lower = title.lower()
+            if any(k in title_lower for k in ignored_keywords):
                 continue
 
             pub_date = self._parse_date(entry)
