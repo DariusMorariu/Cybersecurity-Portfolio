@@ -90,17 +90,30 @@ class XPublisher(BasePublisher):
             return True
 
         except Exception as e:
+            status = getattr(e.response, "status_code", None) if hasattr(e, "response") and e.response is not None else None
+            body = getattr(e.response, "text", "") if hasattr(e, "response") and e.response is not None else ""
+
+            # Explicit check for Twitter API 402 Credits Depleted
+            if status == 402 or "credits depleted" in str(e).lower() or "credits-depleted" in body.lower():
+                msg = (
+                    "[NOTICE] X/Twitter API: 402 Payment Required (Credits Depleted).\n"
+                    "Your X Developer account credentials are valid, but your X account has zero API credits.\n"
+                    "X (Twitter) now requires a paid subscription or API credits to post tweets via API v2.\n"
+                    "The pipeline continues safely: Discord briefing was delivered and state is saved."
+                )
+                logger.warning(msg)
+                print(f"\n{msg}\n")
+                return False
+
             details = []
-            if hasattr(e, "response") and e.response is not None:
-                status = getattr(e.response, "status_code", "N/A")
-                body = getattr(e.response, "text", "")
+            if status:
                 details.append(f"HTTP Status: {status} | Details: {body}")
             if hasattr(e, "api_messages") and e.api_messages:
                 details.append(f"API Messages: {e.api_messages}")
             
             detail_str = f" ({' | '.join(details)})" if details else ""
             msg = f"[ERROR] Failed to publish tweet via X API v2: {e}{detail_str}"
-            logger.error(msg, exc_info=True)
+            logger.error(msg)
             print(msg)
             print("\n[TROUBLESHOOTING X/TWITTER API]")
             print("1. Log in to https://developer.x.com/en/portal/dashboard")
