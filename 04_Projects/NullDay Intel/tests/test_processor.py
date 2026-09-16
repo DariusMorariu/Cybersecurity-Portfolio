@@ -67,3 +67,14 @@ def test_processor_mock_fallback():
     assert len(result.discord_report.incidents) >= 1
     assert result.discord_report.threat_level == "CRITICAL"
     assert len(result.x_payload.tweet_text) <= 260
+
+
+def test_system_prompt_template_rendering():
+    from src.core.processor import SYSTEM_PROMPT_TEMPLATE
+    for mode in ["daily", "weekly", "monthly"]:
+        rendered = SYSTEM_PROMPT_TEMPLATE.replace("{mode}", mode)
+        assert mode in rendered
+        assert "{mode}" not in rendered
+        # Ensure no accidental format placeholders like {System/CVE} remain unescaped
+        assert "{System/CVE}" not in rendered
+        assert "{Link}" not in rendered

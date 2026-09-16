@@ -54,9 +54,9 @@ SECTION REQUIREMENTS:
 
 2. X (Twitter) Alert Payload:
    - tweet_text: Strictly under 260 characters without any emojis:
-     "[CTI ALERT] Active attack targeting {System/CVE}. Risk: {Simple Risk}. Immediate update recommended. #ThreatIntel #CyberSecurity #CVE"
+     "[CTI ALERT] Active attack targeting <System/CVE>. Risk: <Simple Risk>. Immediate update recommended. #ThreatIntel #CyberSecurity #CVE"
    - thread_reply: Strictly under 280 characters without any emojis:
-     "How to fix: Install the latest vendor update and review login logs. Full briefing: {Link}"
+     "How to fix: Install the latest vendor update and review login logs. Full briefing: <Link>"
 
 3. Prioritization Hierarchy:
    - Confirmed Active Exploitation (CISA KEV / 0-day) > Critical CVE (CVSS >= 8.0) > High-impact ransomware / extortion > Major verified data breach.
@@ -206,7 +206,7 @@ class CTIProcessor:
             return self._generate_mock_result([], mode)
 
         prompt_context = self._build_context(articles)
-        system_instruction = SYSTEM_PROMPT_TEMPLATE.format(mode=mode)
+        system_instruction = SYSTEM_PROMPT_TEMPLATE.replace("{mode}", mode)
 
         candidate_models = [self.model_name]
         for fallback in ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-1.5-flash"]:
