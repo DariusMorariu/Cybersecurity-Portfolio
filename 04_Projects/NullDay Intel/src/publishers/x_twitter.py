@@ -39,12 +39,19 @@ class XPublisher(BasePublisher):
                 logger.error(f"Failed to initialize Tweepy client: {e}")
 
     def _has_credentials(self) -> bool:
-        return bool(
-            self.consumer_key
-            and self.consumer_secret
-            and self.access_token
-            and self.access_token_secret
-        )
+        missing = []
+        if not self.consumer_key:
+            missing.append("X_CONSUMER_KEY (or X_API_KEY)")
+        if not self.consumer_secret:
+            missing.append("X_CONSUMER_SECRET (or X_API_SECRET)")
+        if not self.access_token:
+            missing.append("X_ACCESS_TOKEN")
+        if not self.access_token_secret:
+            missing.append("X_ACCESS_TOKEN_SECRET")
+        if missing:
+            logger.info(f"X/Twitter publishing skipped: missing {', '.join(missing)}")
+            return False
+        return True
 
     def publish(self, data: CTIAnalysisResult, dry_run: bool = False) -> bool:
         """Publish alert tweet and optional thread reply to X/Twitter."""

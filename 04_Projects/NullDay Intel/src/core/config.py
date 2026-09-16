@@ -33,10 +33,24 @@ class Settings:
     DISCORD_WEBHOOK_URL: Optional[str] = os.getenv("DISCORD_WEBHOOK_URL")
 
     # X (Twitter) Settings (OAuth 1.0a User Context)
-    X_CONSUMER_KEY: Optional[str] = os.getenv("X_CONSUMER_KEY")
-    X_CONSUMER_SECRET: Optional[str] = os.getenv("X_CONSUMER_SECRET")
-    X_ACCESS_TOKEN: Optional[str] = os.getenv("X_ACCESS_TOKEN")
-    X_ACCESS_TOKEN_SECRET: Optional[str] = os.getenv("X_ACCESS_TOKEN_SECRET")
+    X_CONSUMER_KEY: Optional[str] = (
+        os.getenv("X_CONSUMER_KEY")
+        or os.getenv("X_API_KEY")
+        or os.getenv("TWITTER_API_KEY")
+        or os.getenv("TWITTER_CONSUMER_KEY")
+    )
+    X_CONSUMER_SECRET: Optional[str] = (
+        os.getenv("X_CONSUMER_SECRET")
+        or os.getenv("X_API_SECRET")
+        or os.getenv("TWITTER_API_SECRET")
+        or os.getenv("TWITTER_CONSUMER_SECRET")
+    )
+    X_ACCESS_TOKEN: Optional[str] = (
+        os.getenv("X_ACCESS_TOKEN") or os.getenv("TWITTER_ACCESS_TOKEN")
+    )
+    X_ACCESS_TOKEN_SECRET: Optional[str] = (
+        os.getenv("X_ACCESS_TOKEN_SECRET") or os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+    )
 
     # General
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
