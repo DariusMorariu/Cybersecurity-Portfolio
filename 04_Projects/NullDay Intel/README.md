@@ -72,7 +72,7 @@ flowchart TD
     - 🔴 **Critical Red (`#ED4245`):** Active CISA KEV exploitation, 0-days, or CVSS >= 9.0.
     - 🟠 **High Orange (`#E67E22`):** Ransomware campaigns, extortion events, and high-impact vulnerabilities.
     - 🔵 **Dark Blue (`#34495E`):** Weekly & monthly macro threat digests.
-  - Every incident includes impact sector, damage estimation (`Schadenssumme: Unbekannt / Nicht publiziert`), concrete mitigation steps, and a clickable `[Originalquelle](URL)` link.
+  - Every incident includes impact sector, damage estimation (`Financial Impact: Undisclosed / Under Investigation`), concrete mitigation steps, and a clickable `[Originalquelle](URL)` link.
 - **X (Twitter) Urgent Alert:**
   - Root tweet strictly formatted under 260 characters (leaving space for Twitter links and metadata).
   - Highlights the single most critical threat/CVE of the batch, the affected sector, and targeted hashtags (`#ThreatIntel #CyberSecurity #CVE`).
@@ -185,7 +185,7 @@ Analysis indicates active in-the-wild exploitation targeting enterprise boundary
 [Embed 2] Title: 🚨 [ACTIVE EXPLOIT / KEV] #1/1: Cisco ASA/FTD Authentication Bypass
   • 🎯 Target / Impact Sector: Enterprise VPN & Firewall Perimeter
   • ⚡ Severity & Identifier: `CVE-2026-1234` • CVSS 9.8
-  • 💰 Estimated Impact / Damage: Schadenssumme: Unbekannt / Nicht publiziert
+  • 💰 Estimated Impact / Damage: Financial Impact: Undisclosed / Under Investigation
   • 🛡️ Defensive Action & Mitigation: Apply vendor patch immediately. Restrict admin web interfaces.
   • 🔗 Source & Verification: [Originalquelle](https://nvd.nist.gov/vuln/detail/CVE-2026-1234)
 ======================================================================

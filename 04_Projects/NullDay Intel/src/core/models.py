@@ -44,8 +44,8 @@ class IncidentItem(BaseModel):
         description="Target industry or affected technology (e.g., Healthcare, Critical Infrastructure, Enterprise VPNs, Cloud)"
     )
     estimated_damage: str = Field(
-        default="Schadenssumme: Unbekannt / Nicht publiziert",
-        description="Estimated ransom demand, extortion amount, data breach scale, or 'Schadenssumme: Unbekannt / Nicht publiziert'",
+        default="Financial Impact: Undisclosed / Under Investigation",
+        description="Estimated ransom demand, extortion amount, data breach scale, or 'Financial Impact: Undisclosed / Under Investigation'",
     )
     mitigation: str = Field(
         description="Concrete, actionable mitigation steps (e.g. patch revision, temporary IOC blocking, configuration change)"

@@ -18,7 +18,7 @@ def _sample_analysis(count=3, kev=True) -> CTIAnalysisResult:
             cvss=9.0 if i == 1 else 7.5,
             kev_status=(i == 1 and kev),
             impact_sector="Financial Services / Banking",
-            estimated_damage="Schadenssumme: Unbekannt / Nicht publiziert",
+            estimated_damage="Financial Impact: Undisclosed / Under Investigation",
             mitigation="Restrict network ports and update firmware.",
             source_url=f"https://example.com/advisory-{i}",
         )

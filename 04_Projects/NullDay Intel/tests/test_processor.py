@@ -18,7 +18,7 @@ def test_cti_models_validation():
         cvss=9.8,
         kev_status=True,
         impact_sector="Enterprise VPN & Zero Trust Gateways",
-        estimated_damage="Schadenssumme: Unbekannt / Nicht publiziert",
+        estimated_damage="Financial Impact: Undisclosed / Under Investigation",
         mitigation="Apply security patch release 22.7R2 immediately.",
         source_url="https://cisa.gov/example",
     )
