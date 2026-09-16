@@ -1,0 +1,105 @@
+name: NullDay Intel Pipeline
+
+on:
+  schedule:
+    # Daily: Twice a day at 08:00 CEST (06:00 UTC) and 18:00 CEST (16:00 UTC)
+    - cron: '0 6,16 * * *'
+    # Weekly: Sundays at 18:00 UTC
+    - cron: '0 18 * * 0'
+    # Monthly: 1st day of the month at 08:00 UTC
+    - cron: '0 8 1 * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Briefing execution mode'
+        required: true
+        default: 'daily'
+        type: choice
+        options:
+          - daily
+          - weekly
+          - monthly
+      dry_run:
+        description: 'Dry run (preview in logs without live publishing)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  run-intel:
+    name: Execute CTI Pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: '04_Projects/NullDay Intel/requirements.txt'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r "04_Projects/NullDay Intel/requirements.txt"
+
+      - name: Resolve Run Mode
+        id: resolve-mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MODE="${{ github.event.inputs.mode }}"
+            DRY_RUN="${{ github.event.inputs.dry_run }}"
+          elif [ "${{ github.event.schedule }}" = "0 8 1 * *" ]; then
+            MODE="monthly"
+            DRY_RUN="false"
+          elif [ "${{ github.event.schedule }}" = "0 18 * * 0" ]; then
+            MODE="weekly"
+            DRY_RUN="false"
+          else
+            MODE="daily"
+            DRY_RUN="false"
+          fi
+
+          echo "Selected mode: $MODE"
+          echo "Dry run: $DRY_RUN"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "dry_run=$DRY_RUN" >> "$GITHUB_OUTPUT"
+
+      - name: Run NullDay Intel Briefing Engine
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          X_CONSUMER_KEY: ${{ secrets.X_CONSUMER_KEY }}
+          X_CONSUMER_SECRET: ${{ secrets.X_CONSUMER_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: |
+          EXTRA_FLAGS=""
+          if [ "${{ steps.resolve-mode.outputs.dry_run }}" = "true" ]; then
+            EXTRA_FLAGS="--dry-run"
+          fi
+
+          python "04_Projects/NullDay Intel/main.py" \
+            --mode "${{ steps.resolve-mode.outputs.mode }}" \
+            $EXTRA_FLAGS
+
+      - name: Commit & Push State Persistence
+        if: steps.resolve-mode.outputs.dry_run != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "04_Projects/NullDay Intel/data/intel_history.db"
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(cti): persist intel history state [skip ci]"
+            git push
+          else
+            echo "No state database changes detected. Skipping push."
+          fi

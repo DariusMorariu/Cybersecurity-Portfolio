@@ -1,0 +1,65 @@
+# ==============================================================================
+# NullDay Intel - Curated CTI Feed Sources Configuration
+# ==============================================================================
+
+settings:
+  request_timeout_seconds: 15
+  max_retries: 3
+  user_agent: "NullDayIntel-CTI/1.0 (+https://github.com/DariusMorariu/Cybersecurity-Portfolio)"
+
+sources:
+  - id: cisa_kev
+    name: "CISA Known Exploited Vulnerabilities"
+    type: "cisa_json"
+    url: "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+    enabled: true
+    priority: "CRITICAL"
+    tags: ["kev", "zero-day", "government"]
+
+  - id: cert_bund
+    name: "BSI / CERT-Bund WID"
+    type: "rss"
+    url: "https://wid.cert-bund.de/content/public/securityAdvisory/rss"
+    enabled: true
+    priority: "HIGH"
+    tags: ["advisory", "europe", "government"]
+
+  - id: sans_isc
+    name: "SANS Internet Storm Center"
+    type: "rss"
+    url: "https://isc.sans.edu/rssfeed.xml"
+    enabled: true
+    priority: "HIGH"
+    tags: ["infosec", "threat-landscape", "diaries"]
+
+  - id: bleeping_computer
+    name: "BleepingComputer Security"
+    type: "rss"
+    url: "https://www.bleepingcomputer.com/feed/"
+    enabled: true
+    priority: "HIGH"
+    tags: ["ransomware", "breaches", "active-attacks"]
+
+  - id: the_hacker_news
+    name: "The Hacker News"
+    type: "rss"
+    url: "https://feeds.feedburner.com/TheHackersNews"
+    enabled: true
+    priority: "HIGH"
+    tags: ["threat-actors", "vulnerabilities", "malware"]
+
+  - id: krebs_security
+    name: "Krebs on Security"
+    type: "rss"
+    url: "https://krebsonsecurity.com/feed/"
+    enabled: true
+    priority: "HIGH"
+    tags: ["investigation", "cybercrime", "breaches"]
+
+  - id: dark_reading
+    name: "Dark Reading"
+    type: "rss"
+    url: "https://www.darkreading.com/rss.xml"
+    enabled: true
+    priority: "MEDIUM"
+    tags: ["enterprise-security", "analysis"]

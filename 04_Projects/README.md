@@ -9,7 +9,7 @@ This directory indexes independent cybersecurity software, security engineering 
 | Project | Domain | Description | Tech Stack | Status | Link |
 | :--- | :--- | :--- | :--- | :---: | :--- |
 | **Budget Cybersecurity Homelab** | Infrastructure & Defense | Custom 3D-printed 10-inch homelab rack, Proxmox virtualization, 802.1Q VLAN isolation, Wazuh SIEM telemetry, and ESP32 touch status monitor. | Proxmox VE, Wazuh SIEM, Linux, C++/Arduino, Docker, OpenSCAD | `Active` | [View Project](../01_Homelab/README.md) |
-| **NullDay Intel** | Threat Intelligence | Automated threat intelligence aggregator, IOC ingestion, and vulnerability feed processor. | Python, REST APIs, JSON/SQLite | `In Planning` | [View Project](NullDay%20Intel/README.md) |
+| **NullDay Intel** | Threat Intelligence | Serverless CTI briefing engine running via GitHub Actions: automated feed ingestion (CISA KEV, CERT-Bund), Google GenAI structured threat analysis, and dual-publishing to Discord & X/Twitter. | Python 3.11+, Google GenAI SDK, SQLite, Tweepy, GitHub Actions | `Active` | [View Project](NullDay%20Intel/README.md) |
 
 ---
 

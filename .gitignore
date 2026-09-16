@@ -18,6 +18,7 @@ secrets.*
 *.pcap
 *.pcapng
 *.db
+!**/data/intel_history.db
 *.sqlite
 *.sqlite3
 *.iso
